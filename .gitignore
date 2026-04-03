@@ -1,0 +1,15 @@
+# Dependencies — never push these
+node_modules/
+
+# Secret keys — NEVER push this
+.env
+.env.local
+.env.production
+
+# Build output — not needed on GitHub
+dist/
+build/
+
+# Editor files — not needed
+.vscode/
+.DS_Store
