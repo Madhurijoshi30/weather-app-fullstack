@@ -1,28 +1,57 @@
-const router  = require('express').Router();
+const express = require('express');
+const router  = express.Router();
 const protect = require('../middleware/auth');
 const User    = require('../models/User');
 
-// All routes here require login
+// All routes below require login
 router.use(protect);
 
+// ── GET /api/favourites ──
 router.get('/', async (req, res) => {
-  res.json({ favourites: req.user.favourites });
+  try {
+    res.json({ favourites: req.user.favourites });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
+// ── POST /api/favourites ──
 router.post('/', async (req, res) => {
-  const { city } = req.body;
-  if (!city) return res.status(400).json({ error: 'City required' });
-  if (req.user.favourites.includes(city))
-    return res.status(400).json({ error: 'Already in favourites' });
-  req.user.favourites.push(city);
-  await req.user.save();
-  res.json({ favourites: req.user.favourites });
+  try {
+    const { city } = req.body;
+
+    if (!city) {
+      return res.status(400).json({ error: 'City name is required' });
+    }
+
+    // Don't add duplicates
+    if (req.user.favourites.includes(city)) {
+      return res.status(400).json({ error: `${city} is already in your favourites` });
+    }
+
+    req.user.favourites.push(city);
+    await req.user.save();
+
+    res.json({ favourites: req.user.favourites });
+
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
+// ── DELETE /api/favourites/:city ──
 router.delete('/:city', async (req, res) => {
-  req.user.favourites = req.user.favourites.filter(c => c !== req.params.city);
-  await req.user.save();
-  res.json({ favourites: req.user.favourites });
+  try {
+    req.user.favourites = req.user.favourites.filter(
+      c => c.toLowerCase() !== req.params.city.toLowerCase()
+    );
+    await req.user.save();
+
+    res.json({ favourites: req.user.favourites });
+
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
 module.exports = router;
