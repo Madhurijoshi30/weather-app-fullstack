@@ -3,7 +3,7 @@ const router  = express.Router();
 
 // ── Simple cache ──
 const cache          = new Map();
-const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
+const CACHE_DURATION = 10 * 60 * 1000;
 
 function getCached(key) {
   if (!cache.has(key)) return null;
@@ -12,32 +12,28 @@ function getCached(key) {
     cache.delete(key);
     return null;
   }
+  console.log('Cache hit for key:', key);
   return data;
 }
 
 function setCache(key, data) {
+  console.log('Cache set for key:', key);
   cache.set(key, { data, timestamp: Date.now() });
 }
 
 // ── GET /api/weather?city=Mumbai ──
 router.get('/weather', async (req, res) => {
   const city = req.query.city;
+  if (!city) return res.status(400).json({ error: 'City name is required' });
 
-  if (!city) {
-    return res.status(400).json({ error: 'City name is required' });
-  }
-
-  const cacheKey = `weather_${city.toLowerCase()}`;
+  // Key must include city name
+  const cacheKey = `weather_${city.toLowerCase().trim()}`;
   const cached   = getCached(cacheKey);
-
-  if (cached) {
-    console.log(`Cache hit: ${city}`);
-    return res.json(cached);
-  }
+  if (cached) return res.json(cached);
 
   try {
     const apiKey   = process.env.WEATHER_API_KEY;
-    const url      = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`;
+    const url      = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&units=metric&appid=${apiKey}`;
     const response = await fetch(url);
     const data     = await response.json();
 
