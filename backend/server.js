@@ -10,12 +10,25 @@ const favouriteRoutes  = require('./routes/favourites');
 const app = express();
 
 app.use(cors({
-  origin: [
-    'http://localhost:5173',                          // local dev
-    process.env.FRONTEND_URL,                         // production Vercel URL
-  ],
-  credentials: true
+  origin: function(origin, callback) {
+    const allowedOrigins = [
+      'http://localhost:5173',
+      'http://localhost:3000',
+      'https://weather-app-fullstack-lilac.vercel.app',
+    ];
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS blocked for origin: ${origin}`));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+
+app.options('*', cors());
 app.use(express.json());
 
 app.use('/api/auth',       authRoutes);
