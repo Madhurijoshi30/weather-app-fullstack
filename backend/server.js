@@ -14,7 +14,7 @@ app.use(cors({
     const allowedOrigins = [
       'http://localhost:5173',
       'http://localhost:3000',
-      'https://weather-app-fullstack-lilac.vercel.app',
+      'https://weather-app-fullstack-five.vercel.app',
     ];
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) {
