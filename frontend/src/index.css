@@ -18,6 +18,7 @@
   --transition:   0.3s ease;
 }
 
+
 /* ── Base — body always has a background ── */
 html, body, #root {
   width: 100%;

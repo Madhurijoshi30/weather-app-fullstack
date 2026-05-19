@@ -11,8 +11,9 @@ router.get('/', async (req, res) => {
   try {
     res.json({ favourites: req.user.favourites });
   } catch (err) {
-    res.status(500).json({ error: 'Server error' });
-  }
+  console.log(err);
+  res.status(500).json({ error: err.message });
+}
 });
 
 // ── POST /api/favourites ──
@@ -35,8 +36,9 @@ router.post('/', async (req, res) => {
     res.json({ favourites: req.user.favourites });
 
   } catch (err) {
-    res.status(500).json({ error: 'Server error' });
-  }
+  console.log(err);
+  res.status(500).json({ error: err.message });
+}
 });
 
 // ── DELETE /api/favourites/:city ──
@@ -50,8 +52,9 @@ router.delete('/:city', async (req, res) => {
     res.json({ favourites: req.user.favourites });
 
   } catch (err) {
-    res.status(500).json({ error: 'Server error' });
-  }
+  console.log(err);
+  res.status(500).json({ error: err.message });
+}
 });
 
 module.exports = router;
