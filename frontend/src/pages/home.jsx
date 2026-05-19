@@ -5,7 +5,7 @@ import WeatherCard             from '../components/WeatherCard';
 import ForecastCard            from '../components/ForecastCard';
 import Loader                  from '../components/Loader';
 import WeatherBackground       from '../components/WeatherBackground';
-import { getWeather, getForecast, getWeatherByCoords, saveFavourite } from '../api/weatherApi';
+import { getWeather, getForecast, getWeatherByCoords, saveFavourite, getFavourites } from '../api/weatherApi';
 import { useAuth }             from '../context/AuthContext';
 
 function processWeather(data) {
@@ -55,8 +55,23 @@ export default function Home() {
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState('');
   const [saveMsg,  setSaveMsg]  = useState('');
+  const [favourites, setFavourites] = useState([]);
 
   const { isLoggedIn, user, logout } = useAuth();
+
+  async function fetchFavourites() {
+  try {
+    const res = await getFavourites();
+    setFavourites(res.data.favourites);
+  } catch (err) {
+    console.log(err);
+  }
+}
+useEffect(() => {
+  if (isLoggedIn) {
+    fetchFavourites();
+  }
+}, [isLoggedIn]);
 
   // Derive background class directly from weather state
   // No useEffect, no document.body — pure React
@@ -130,6 +145,7 @@ export default function Home() {
     try {
       await saveFavourite(weather.city);
       setSaveMsg(`${weather.city} saved to favourites!`);
+      fetchFavourites();
     } catch (err) {
       setSaveMsg(err.response?.data?.error || 'Could not save');
     }
@@ -182,6 +198,15 @@ export default function Home() {
             {saveMsg && <p className="save-msg">{saveMsg}</p>}
           </>
         )}
+        {favourites.length > 0 && (
+  <div className="favourites-section">
+    <h2>⭐ Favourite Cities</h2>
+
+    {favourites.map((city, index) => (
+      <p key={index}>{city}</p>
+    ))}
+  </div>
+)}
 
         {forecast.length > 0 && <ForecastCard days={forecast} />}
 
