@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link }                from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import SearchBar               from '../components/SearchBar';
 import WeatherCard             from '../components/WeatherCard';
 import ForecastCard            from '../components/ForecastCard';
@@ -58,6 +58,7 @@ export default function Home() {
   const [favourites, setFavourites] = useState([]);
 
   const { isLoggedIn, user, logout } = useAuth();
+  const navigate = useNavigate();
 
   async function fetchFavourites() {
   try {
@@ -151,6 +152,12 @@ useEffect(() => {
     }
     setTimeout(() => setSaveMsg(''), 3000);
   }
+  
+  function handleLogout() {
+  logout();
+  setFavourites([]);
+  navigate('/');
+}
 
   return (
     // bgClass goes on this div — not on document.body
@@ -166,7 +173,7 @@ useEffect(() => {
             {isLoggedIn ? (
               <>
                 <span className="navbar-user">Hi, {user?.name}</span>
-                <button className="navbar-btn" onClick={logout}>Logout</button>
+                <button className="navbar-btn" onClick={handleLogout}>Logout</button>
               </>
             ) : (
               <Link to="/login" className="navbar-btn accent">Login / Sign Up</Link>
