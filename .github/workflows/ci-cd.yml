@@ -1,0 +1,119 @@
+name: Weather App CI/CD Pipeline
+ 
+# ── Triggers ──────────────────────────────────────────────────────────────────
+on:
+  push:
+    branches: [main]        # Runs on every push to main
+  pull_request:
+    branches: [main]        # Runs on every PR targeting main
+ 
+jobs:
+ 
+  # ── Job 1: Test Backend ─────────────────────────────────────────────────────
+  test-backend:
+    name: Test Backend
+    runs-on: ubuntu-latest
+ 
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+ 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+ 
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm install
+ 
+      # Runs tests if you have them — skips silently if you don't yet
+      - name: Run backend tests
+        working-directory: ./backend
+        run: npm test --if-present
+ 
+  # ── Job 2: Build Frontend ───────────────────────────────────────────────────
+  test-frontend:
+    name: Build Frontend
+    runs-on: ubuntu-latest
+ 
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+ 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+ 
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm install
+ 
+      # Building catches any compile/import errors before they reach production
+      - name: Build frontend
+        working-directory: ./frontend
+        run: npm run build
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+ 
+  # ── Job 3: Build and Push Docker Images ────────────────────────────────────
+  # Only runs on push to main — not on pull requests
+  # Only runs if both test jobs above pass
+  docker-build:
+    name: Build and Push Docker Images
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-frontend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+ 
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+ 
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+ 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+ 
+      # Builds backend image and pushes to Docker Hub
+      - name: Build and push backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/weather-backend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+ 
+      # Builds frontend image with Render URL baked in and pushes to Docker Hub
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/weather-frontend:latest
+          build-args: |
+            VITE_API_URL=${{ secrets.VITE_API_URL }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+ 
+  # ── Job 4: Trigger Render Redeploy ─────────────────────────────────────────
+  # Uncomment this once you have a Render deploy hook URL
+  # Get it from: Render dashboard → your service → Settings → Deploy Hook
+  #
+  # deploy:
+  #   name: Deploy to Render
+  #   runs-on: ubuntu-latest
+  #   needs: docker-build
+  #   steps:
+  #     - name: Trigger Render deploy
+  #       run: |
+  #         curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
