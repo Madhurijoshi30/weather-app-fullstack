@@ -20,3 +20,5 @@ export const registerUser     = (data)       => api.post('/auth/register', data)
 export const saveFavourite    = (city)       => api.post('/favourites', { city });
 export const getFavourites    = ()           => api.get('/favourites');
 export const deleteFavourite  = (city)       => api.delete(`/favourites/${city}`);
+
+export const getAIRecommendation = (weatherData) => api.post('/recommend', { weatherData });
