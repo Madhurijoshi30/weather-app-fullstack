@@ -1,5 +1,6 @@
 const express = require('express');
 const router  = express.Router();
+const { getWeatherRecommendation } = require('../services/aiService');
 
 // ── Simple cache ──
 const cache          = new Map();
@@ -122,6 +123,28 @@ router.get('/weather/coords', async (req, res) => {
 // ── GET /api/ping — test route ──
 router.get('/ping', (req, res) => {
   res.json({ message: 'Backend is running!' });
+});
+
+// POST /api/weather/recommend
+router.post('/recommend', async (req, res) => {
+    try {
+        const { weatherData } = req.body;
+
+        if (!weatherData) {
+            return res.status(400).json({ 
+                error: 'Weather data is required' 
+            });
+        }
+
+        const recommendation = await getWeatherRecommendation(weatherData);
+        res.json({ recommendation });
+
+    } catch (error) {
+        console.error('AI recommendation error:', error);
+        res.status(500).json({ 
+            error: 'Could not generate recommendation' 
+        });
+    }
 });
 
 module.exports = router;

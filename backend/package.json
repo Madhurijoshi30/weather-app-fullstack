@@ -4,7 +4,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-   "test": "echo \"No tests yet\""
+    "test": "echo \"No tests yet\""
   },
   "keywords": [],
   "author": "",
@@ -15,6 +15,7 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.0",
     "express": "^5.2.1",
+    "groq-sdk": "^1.2.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.4.1",
     "node-fetch": "^3.3.2"
